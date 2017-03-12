@@ -43,14 +43,8 @@ def pretty_print(data, indent=4):
 
 
 def main():
-    '''
-    Modify the function calls and indexing below to answer the questions on
-    the next quiz. HINT: Note how the output we get from the site is a
-    multi-level JSON document, so try making print statements to step through
-    the structure one level at a time or copy the output to a separate output
-    file.
-    '''
-    results = query_by_name(ARTIST_URL, query_type["simple"], "Nirvana")
+
+    results = query_by_name(ARTIST_URL, query_type["simple"], "Linkin Park")
     pretty_print(results)
 
     artist_id = results["artists"][1]["id"]
