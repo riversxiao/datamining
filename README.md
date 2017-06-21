@@ -5,6 +5,6 @@ analysis
 [get_music_data](musicread.py)
 this is the JSON data I get from website:musicbrainz.org
 
-[financial times title](interactive\ with\ web\ browser.ipynb)
+[financial times title](interactive_with_web_browser.ipynb)
 this is the tutorial for getting titles in financial times bilingual section
 
