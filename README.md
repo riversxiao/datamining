@@ -2,7 +2,11 @@
 
 ------
 
-**talk is cheap, show me the data**
+**Talk is cheap, Show me the data**
+
+<img src='https://www.deepdotweb.com/wp-content/uploads/2017/02/deep-web-data-mining-algorithm-2-png-1024x576.jpeg' width=400>
+
+source(deepdotweb)
 
 In this project, I'm creating different python code to handle different 
 aspect of data analysis
