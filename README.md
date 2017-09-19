@@ -1,26 +1,29 @@
-In this project, i'm creating several python codes to
-get data from various websites to gather data for further data
-analysis
+## Data Mining Project
 
-[get_music_data](musicread.py)
-this is the JSON data I get from website:musicbrainz.org
+------
 
-[financial times title](interactive_with_web_browser.ipynb)
-this is the tutorial for getting titles in financial times bilingual section
+**Talk is cheap, Show me the data**
 
-[How to Use API](API.ipynb)
-This is the notebook shows how to use API on some website 
+<img src='https://www.deepdotweb.com/wp-content/uploads/2017/02/deep-web-data-mining-algorithm-2-png-1024x576.jpeg' width=400>
 
-[crawler simple website based on ID](ID iteration crawler.ipynb)
-This is the notebook to crawler small forum liked website
+source(deepdotweb)
 
-[Let's_add_some_regex](Let_add_some_regex.ipynb)
-This notebook introduces the how we can use regex to get certain pattern web links. 
+In this project, I'm creating different python code to handle different 
+aspect of data analysis
 
-[think](Before_Scraping.ipynb) 
-Let's think about what we can do before scraping a website
+1. webscaper for get data from various data source
 
-[Parsing Robots](Pasing robots.txt.ipynb)
-how we can use a robots to parse a website
+2. datacleaning for preprocessing the data
+
+3. datastoring for importing data excute sql and export data for further analysis
+
+4. datamanipulation for performing data analysis using tools like numpy pandas or dplyr in R
+
+5. datavisualization for presenting data to audience including ggplot2, matplotlib, D3, tableau
+
+
+This is a continuous project that need further refine and maintain, I'll keep updating the content
+
+
 
 
