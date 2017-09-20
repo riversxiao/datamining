@@ -1,0 +1,854 @@
+# Loan Credit Investigation by Rivers, Xiao
+========================================================
+
+## Abstract
+ 
+During last several hundreds of years, mutiple Industrial Revolutions happened, 
+yet, financial industry has been stubbornly resilient to new technology 
+inventions. But in recent years,P2P lending has become a quite hot topic. 
+I???m curious to know whether P2P lending will democratize the financial industry 
+or fall short of its promises. 
+In this report, I???ll perform some data analysis to explore different variables 
+in the Prosper dataset(a dataset from a P2P firm called Prosper) to get a 
+better understanding of this business and try to predict the prospect of this 
+industry. 
+
+## Introduction
+
+Since the beginning of the modern financial system, borrowing and lending 
+hasn???t changed much. The loan is usually covered by collaterals and issued 
+by a commercial bank. If the loan is not repaid in time, banks would use 
+the backup collaterals to cover the exposure of the default risk. 
+This traditional method, however, doesn???t fully utilize the potential of 
+personal credit. Since credit worthy people won???t be able to borrow any 
+funds if the borrower doesn???t have any asset as collateral for the loan.
+
+With the advent of P2P lending, P2P firms claimed to offer lower rates to
+borrowers, and reduced risk to lenders. By examining the credit worthy of 
+a potential borrower based on some algorithms and models, the P2P firm is 
+able to approve a certain amount of loans to the borrower without any 
+collateral, thus reduces the cost faced by the borrower. Besides, by applying
+advanced models and algorithms, the P2P firm is capable of filtering out
+high risk borrowers, which in turn reduced the risk faced by lenders.
+
+Without further ado, let???s take a look on the data provided by Prosper- a 
+leading lending company, and get a glimps about this industry.
+
+First, I'll load all the libraries used in the analysis. ggplot2 is used for 
+drawing the graph, lubridate is used to deal with the datetime type data, 
+maps is used to get Geo data, ggthemes is used to decorate the graph,
+corrplot is used to draw correlation between variables, gridExtra is used 
+to display the graph, reshape is used to reshape the data, and dplyr is used 
+to manupulating the data. 
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+# Load all of the packages I used in my analysis
+# echo set to FALSE to prevent the codes from displaying in the 
+# knitted HTML output
+library(ggplot2)
+library(lubridate)
+library(maps)
+library(ggthemes)
+library(corrplot)
+library(gridExtra)
+library(reshape)
+library(dplyr)
+```
+
+## Dateset
+
+Before the analysis, I'll describe about the dataset I use. The dataset I'm 
+using comes from Prosper - an online P2P firm. This data set contains 113,937 
+loans with 81 variables on each loan, including borrower profile, loan 
+attributes, Prosper's risk system score assigned to the loan and etc. 
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Load_the_Data}
+# load the prosper dataset and make a copy of it. 
+prosper <- read.csv('dataSet/prosperLoanData.csv')
+ds <- prosper
+```
+
+The following operations give a brief summary of the dataset, and change 
+the data type of a few columns for further investigation.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, data_description}
+# brief summary of the dataset
+str(ds)
+#ListingCreationDate  factor -> Date 
+ds$ListingCreationDate <- as.Date(ds$ListingCreationDate,  format="%Y-%m-%d")
+# subset(ds, ds$ListingCreationDate > as.Date('2009-07-31')) 
+# since data before July #2009 are incomplete
+
+# ListingCategory..numeric. -> ListingCategory
+names(ds) <- ifelse(names(ds) == 'ListingCategory..numeric.', 
+                    'ListingCategory', names(ds))
+```
+
+## Analysis for the single varible. 
+
+As we can see from above summary, there are too many variables to look at, 
+so I will first look at variables which interest me most. 
+
+The first variable catched my eye is the listing category, 
+since I'm curious about where the borrowers are going to use the funds. 
+
+graph 1-1
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Univariate_Plots}
+category <- ggplot(data = ds,aes(ds$LoanOriginalAmount))
+category+
+  geom_histogram(fill ='red',binwidth = 1000)+
+  theme_economist()+
+  ggtitle("Loan Original Amount")+
+  xlab("Loan Amount") + ylab("Count")
+```
+
+graph 1-2
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#create category bar chart to represent the number of each listing
+category <- ggplot(data = ds,aes(ds$ListingCategory))
+category+
+  geom_bar(fill ='red')+
+  scale_x_continuous(breaks=seq(1,20,2))+
+  scale_y_log10()+
+  scale_colour_economist()+
+  theme_economist()+
+  ggtitle("Listing Category")+
+  xlab("Listing Type") + ylab("Count In Log Scale")
+```
+
+There are 20 categories in total, And I listed all of them below for referrence. 
+
+0 - Not Available, 1 - Debt Consolidation, 2 - Home Improvement, 3 - Business, 4 - Personal Loan, 5 - Student Use, 6 - Auto, 7- Other, 8 - Baby&Adoption, 9 - Boat, 10 - Cosmetic Procedure, 11 - Engagement Ring, 12 - Green Loans, 13 - Household Expenses, 14 - Large Purchases, 15 - Medical/Dental, 16 - Motorcycle, 17 - RV, 18 - Taxes, 19 - Vacation, 20 - Wedding Loans
+
+As we can see from above graph, most listing are used for type 1(Debt Consolidation) reason. I don't feel surprised at seeing this result. I think there are probably two main reasons for this high ratio.
+
+The first reason is as follow, a lot of borrowers are too lazy to check all available options to validate their loan type, so a lot of people would simply choose which ever comes to them first, namely the first option. 
+
+Now,Let's assume all borrowers will check each option carefully and faithfully choose their real reason, then type 1 will still occupy a large percentage. why? Because a lot of people have strong incentive to use the funds to repay their credit card. Often times, the loan rate offered by P2P firms is lower than that offered by credit union. Take China for intance, the credit card repayment EAR(effective annual rate) is around 18% if user is not able to repay before payable day. Hence ,as long as P2P rate is lower than 18%, borrowers would use P2P loans to consolidate their loan. To confirm my assumption, I'll take a look at the interest rate in the next plot.
+
+Other options are significantly dwarfed by type 1 option. I was think that since US households typically don't save much, "Large Purchases" could also occupy a large percentage, but it turns out little people choose that type. I guess one reason could be that they are using specific reason like auto, house expense, or home improvement instead. 
+
+
+
+Now let's look at the  borrower rate as it determines the attractiveness of the P2P lending.  
+
+graph 2
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Histogram for BorrowerRate
+rate <- 
+  ggplot(ds, aes(y = BorrowerRate,x = Term/12,group =Term))
+rate + 
+  geom_boxplot() +
+  stat_summary(fun.y="mean", geom="point", shape=23, size=1, fill="orange")+
+  theme_economist()+
+  xlab("Term In Years") + ylab("rate range")+
+  scale_x_continuous(breaks=seq(1,6,2))
+
+```
+
+From above boxplot,we can clear see that borrowing rate range varies a lot. The majority loans have a upper bound below 25% and a lower bound above 10%, and as Term increases, uncertainty also increases, thus a higher yield is required to compensate the risk involved. As we can see, the mean value among these three terms are between 15%-20%, which is lower than that of the credit union. This will definitely serve as a huge incentive for people to borrow from P2P firm. 
+
+The next variable that interests me is the term of the loan. Because the longer the term the higher the exposure. To properly handle this type of risk, Prosper would have to device its loan term very carefully to avoid long term deliquency issue.
+
+graph 3
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, Univariate_Summary}
+
+# summary of the Term
+TermSummary <- ds %>%
+  group_by(Term) %>%
+  summarise(LoanAmtVolume = sum(as.numeric(LoanOriginalAmount)),
+          LoanAmtMean = mean(as.numeric(LoanOriginalAmount)),
+          LoanAmtMedian = median(as.numeric(LoanOriginalAmount)),
+          LoanCnt = n()) %>%
+  arrange(Term)
+
+#arrange(TermSummary, desc(LoanCnt))
+
+#bar chart of the Term
+year_term <- ggplot(ds, aes(x = factor(year(ds$LoanOriginationDate)), 
+                            fill = factor(Term/12))) +
+  geom_bar() +
+  theme_economist() +
+  xlab("Loan Origination Year") + ylab("Count") +
+  ggtitle('Loan Term in Years')
+
+grid.arrange(year_term)
+```
+
+From the above table and chart, we can observe a clear trend-As loan Term increases, loan amount is also tend to increase. 
+
+There are three loan terms in Prosper-the minimum period of the loan is 1 year and maximum period is 5 year. The median is 3 years. The majority loans are listed with three year period, and few people take loan of one year and five year peroid.  It is easy to handle the deliquency issue for simple term structure loans. The prosper company starts with 3 year loan and later, when the company gain more experience, they added 1 year loan and 5 year loan.
+
+
+The next variable to look into is the rating of borrower given by Prosper
+
+graph 4
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# Histogram for rating
+RatingData <- filter(ds,ListingCreationDate>as.Date('2009-07-31'))
+
+ggplot(RatingData,aes(ProsperScore))+
+  geom_histogram(breaks=seq(0, 11, by = 0.5), 
+                 alpha = .7)+
+  theme_economist()+
+  xlab("Prosper Score (11 is best)") + ylab("count")+
+  scale_x_continuous(breaks=seq(0,11,1))
+
+```
+
+Prosper rates it borrowers from 1 to 11,with 11 being the best.
+
+As the above chart shows, the ratings of the borrowers falls into a bell shape curve, with large portion of borrwers in the middle range and a few  borrower falls in the range of good rating or bad rating. Rating is a key indicator of borrower's credit worthiness. Normally, borrowers with low credit worthiness-namely higher default rate would need to offer a higher rate to attract potential investors, I'll look into the relationship between these two in the bivariate analysis section.
+
+Last, I'm going to look at which states borrows most from P2P firm.
+
+graph 5
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+map <- map_data("state")# import state map
+data(state)
+states <- data.frame(state.abb, 
+                     state.name, 
+                     state.area, 
+                     state.center, 
+                     state.division, 
+                     state.region, 
+                     state.x77)#create states dataframe
+states <- subset(states, 
+                 ! state.abb %in% c("HI", "AK"))#exclude HI and AK state
+colnames(states)[2] <- 'region'#rename col2 to region for merging data
+#for variable in region,covert to lower case
+states$region <- tolower(states$region)
+colnames(states)[1] <- 'BorrowerState'#rename for merging
+loan_region_state <- merge(ds,
+                          states,
+                          by='BorrowerState')#merge states and prosper data
+
+loanamt <- loan_region_state %>%
+  select(LoanNumber,LoanOriginalAmount,region) %>%
+  group_by(region)%>%
+  summarise_each(funs(sum))#loan Original Amount with region dataframe
+loan_map <- arrange(merge(map,loanamt,by='region'),order)
+  # add long and lag to the datafrome
+
+Borrow_states <- ggplot(data = loan_map, 
+                        aes(x = long, y = lat,group = group)) +
+  geom_polygon(aes(fill=cut_number(LoanOriginalAmount/1000000,5)))+
+  coord_map()+
+  scale_fill_manual("Amount In Million", values = c("#fef0d9",'#fdcc8a','#fc8d59','#e34a33','#b30000'),
+                    labels=c("lowest",'low','medium','high','highest'))+
+  theme_bw()+
+  geom_text(data = states, aes(x     = x, 
+                               y     = y, 
+                               label = BorrowerState,
+                               group = NULL), 
+            size = 3, 
+            colour="grey")+
+  theme_economist() +
+  xlab("Longitude") + ylab("Latitude") +
+  ggtitle('Borrow Amount With States')
+
+grid.arrange(Borrow_states)
+ggsave('~/Desktop/Borrow_Amount_With_State.jpeg',
+       units = 'in',width=10,height=5,dpi=300)
+```
+
+As we can see, regions with higher population tend to have higher borrowing. for example, the four states with highest population - CA, NY, TX, FL are the ones borrow the most. 
+
+
+which state has the poorest credit score
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+multiple_variable_data <- loan_region_state %>%
+  select(ProsperScore,
+         LoanOriginalAmount,
+         EstimatedReturn,
+         LoanStatus,
+         BorrowerRate,
+         Investors,
+         region)
+
+Score_of_Region <- multiple_variable_data %>%
+  select(ProsperScore,region)%>%
+  filter(ProsperScore!="NA")%>%
+  group_by(region)%>%
+  summarise(mean = mean(ProsperScore))
+#loan Original Amount with region dataframe
+Score_of_Region$mean <-  as.numeric(Score_of_Region$mean)
+meanValue <- median(Score_of_Region$mean)
+
+Score_map <- arrange(merge(map,
+                           Score_of_Region,
+                           by='region',
+                           all = TRUE),
+                     order)
+  # add long and lag to the datafrome
+Score_map$mean[is.na(Score_map$mean)] <- meanValue
+Borrow_states <- ggplot(data = Score_map, aes(x = long, 
+                                              y = lat,
+                                              group = group)) +
+  geom_polygon(aes(fill=cut_number(mean,5)))+
+  coord_map()+
+  scale_fill_manual("Score Range", values = rev(c("#fef0d9",'#fdcc8a','#fc8d59','#e34a33','#b30000')),
+                    labels=c("bad",'poor','fair','good','excellent'))+
+  theme_bw()+
+  geom_text(data = states, aes(x     = x, 
+                               y     = y, 
+                               label = BorrowerState,
+                               group = NULL), 
+            size = 3, 
+            colour="grey")+
+  theme_economist() +
+  xlab("Longitude") + ylab("Latitude") +
+  ggtitle('Credit Score Among States')
+
+grid.arrange(Borrow_states)
+```
+
+As we can see from the above picture, some states have relatively low average credit score.
+
+
+# Univariate Analysis Summary
+
+In the above plots, I analysed 5 parts of the data.
+
+1. Listing Categories
+2. Rate given by the borrowers
+3. Term Structure of the loans
+4. Rating given by Prosper
+5. loan based on State
+
+From the above analysis, here are some of the findings worth noting.
+
+Firstly, P2P lending lower the borrowing rate thus helps borrowers save the cost. As a report shows , average US credit card rate is around 18%, while as our stats shows ,the borrowing rate of P2P is around 15%, this three percent gap will surely make P2P firms more appealling to customer than traditional funding method. 
+
+Secondly, P2P firms are at their early stage. Term structure lacks variation. Most loans are three years, though there are signs that five years and one year loan are become more frequent. Yet, compared with traditonal funding method, it still has long way to catch up.
+
+Last but not the least, normally, borrower's credit rating should fall into a bell curve shape as it shows in the graph.It appears Prosper has a good scoring model, however, I think there are potential problems with the rating.
+
+As we all know, there are lots of frausters out there trying to take advantage of Prosper lending business. With these fraudulent loans adding to the data, score system should give a right tailed curve rather than a normal distributed one. 
+
+To further investigate the data, I'll take a look at the relationship between variables. 
+
+
+## Bivariate Plots
+From above analysis, we have a general idea of where these loans are spent, loans types and credit worthy of the investors. Lenders will definitely look into these indicators to measure the loan quality, yet, there are a lot more factors affecting people's choice on which loan to invest. There is a popular theory in finance and economics call risk preference theory. According to the theory, most investors are risk averse,  which states that when faced with two investments with a similar expected return (but different risks),investors will prefer the one with the lower risk. 
+
+Here, I would like to use the emperical data to examine this theory. 
+My logic goes like this
+1. If investors are risk averse, then they will prefer borrowers with higher credit.
+2. If investors are risk averse, With similar expected return, people will choose low defauld borrowers.
+3. Since there are limited amount of high credit worthy borrowers, they would have upper hand in negotiagting     the rate with lenders, thus, the higher score the borrowers ,the lower the borrow rate will be.
+
+To test the assumption, Let's first take a look at how credit score affecting investors' choice.
+
+graph 6
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#create a table including loan return ,loan status , amount , date,rating
+loan_rr_table <- data.frame(ds$LoanStatus,
+                ds$BorrowerRate,
+                ds$LoanOriginalAmount,
+                ds$LoanOriginationDate,
+                ds$ProsperScore)
+
+colnames(loan_rr_table)[1:5] <- c('LoanStatus',
+                                  'BorrowerRate',
+                                  'LoanAmount',
+                                  'LoanDate',
+                                  'Score')
+
+loan_rr_table <- filter(loan_rr_table,
+                        as.Date(LoanDate)>as.Date('2009-07-31'))
+Amount_to_Score <- ggplot(loan_rr_table,aes(Score,
+                                            LoanAmount,group=Score))+
+  geom_boxplot(alpha =0.5)+
+  theme_economist()+
+  scale_x_continuous(breaks=seq(0,11,1))+
+  xlab("Prosper Score") + ylab("Loan Amount") +
+  ggtitle('Loan Amount With Prosper Score')
+
+grid.arrange(Amount_to_Score)
+
+```
+
+The x axies represent the score given by Prosper, the higher the score the better the borrower. The y axies is the loan amount given to each loan.
+As we can see from above graph, borrowers who have higher prosper scores are able to borrow more loans compared with those who have lower prosper scores. I previously briefly discussed the possible bias of the Prosper score system in graph 4, and it may not reflect the real credit worthiness of a customer.In the long run, if a P2P firm wants to develop sustainably and make some profit, everything boils done to its risk control ability, Prosper score definitely shows how well its risk control ability is.
+
+Since we have several years' data of the borrowers. I'll draw a graph to meature the correlation of the default rate and Prosper Score.
+
+In the dataset, there are two terms associated with default risk. They are "Chargedoff" and "Defaulted".  The definitions of these two terms differs from our common sense. According to defination on Prosper website, when a loan is 121 days past due, it is considered charge off.
+When a loan is in one of the following situations ,it is considered default. 
+Delinquency
+Bankruptcy
+Deceased
+Repurchased
+Paid in full
+Settled in full
+
+Here, I'll combine Charge off loans and Default loans as our indicator to represent our loan default rate. the following graph shows the relationship of default rate and prosper score. If the Prosper system is good, these two terms should have a very high correlation.   
+
+graph 7
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+#default loan group by score
+Default_loan <- loan_rr_table %>%
+  filter( LoanStatus %in% c('Chargedoff','Default'))%>%
+  group_by(Score)%>%
+  summarise(Default = sum(LoanAmount))
+
+All_loan <- loan_rr_table %>%
+  group_by(Score)%>%
+  summarise(Total = sum(LoanAmount))
+
+risk_return <- merge(Default_loan,All_loan,by ='Score')%>%
+  mutate(ratio = Default/Total)
+Default_to_Score <- ggplot(risk_return,aes(Score,ratio))+
+  geom_bar(stat ='identity')+
+  geom_smooth(colour="blue")+
+  theme_economist() +
+  scale_x_continuous(breaks=seq(0,11,1))+
+  xlab("Prosper Score") + ylab("Default Ratio") +
+  ggtitle('Default Ratio With Prosper Score')
+grid.arrange(Default_to_Score)
+```
+
+From above graph,we can clearly see a strong correlation between these two variables- the higher the Prosper Score, the lower the default rate, but there exist some adversaries- borrowers with prosper score of 4 and 3 has a lower default rate than that of borrowers with prosper score of 5 and 6. Combining result from graph 4 and 7, I believe there are exist some problems in the prosper rating system. Some low credit borrower(fraudster) took the advantage of these flaws, got themselves a higher score. That's why we see a higher default rate in credit score of 5 and 6 compared with  that of 3 and 4.
+
+The following graph took a further look at the score system
+
+graph 8
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ds$ProsperScore = as.numeric(ds$ProsperScore)
+meanProsperScore <- ds[c('ProsperScore', 'LoanStatus')] %>% 
+    filter(ProsperScore!="NA")%>%
+    group_by(LoanStatus) %>% 
+    summarise (mean = mean(ProsperScore), median = median(ProsperScore))
+meanProsperScore <- melt(as.data.frame(meanProsperScore), id = 'LoanStatus')
+
+Score_to_loanStatus<- ggplot(aes(LoanStatus, value, fill = variable), data= subset(meanProsperScore,meanProsperScore$LoanStatus
+              %in% 
+              c('Defaulted', 'Chargedoff', 'Completed', 'Current'))) +
+  geom_bar(stat="identity", position = 'dodge',alpha = 0.7)+
+  theme_economist()+
+  xlab("Loan Status") + ylab("Average Prosper Score") +
+  ggtitle('Score With Loan Status') 
+grid.arrange(Score_to_loanStatus)
+
+```
+
+As we can see from above graph ,even though the score system won't be able to give a precise measurement of the credit worthiness of the borrowers, it does give a good fair measurement of the borrowers in general. On average, borrowers who completed the loan repayment has one point higher than those who didn't. 
+
+
+Now, let's get back to our 'risk aversion theory' test. I'll measure the relationship between expected return on the loan and prosper score.
+
+graph 9
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+Return_to_Score <- ggplot(aes(ProsperScore, 
+                              EstimatedReturn,
+                              group = ProsperScore), 
+                          data = ds) + 
+  geom_boxplot(outlier.size=1.5, alpha =0.2)+
+  stat_summary(fun.y="mean", geom="point", shape=23, size=1, fill="orange")+
+  theme_economist()+
+  scale_x_continuous(breaks=seq(0,11,1))+
+  xlab("Prosper Score") + ylab("Estimated Return") +
+  ggtitle('Estimated Return With Prosper Score')  
+grid.arrange(Return_to_Score)
+```
+
+As we can see from the above graph, most loans with score below 8 offer similar expected return, yet they bear different risks. For instance, for borrowers with score 1, you would probably lose 20% of your principle, while for borrowers with a higher score , let's say score 7, the maximum amount you would lose is around 2% of your principle. This observation fits our theory exactly. Further more, since the number of  prime loans are limited, investors would like to sacrifice return for a lower risk loan. 
+
+
+Investor's preference
+
+Next, I'll draw several graph to take a dip into investors' preference
+The below graph shows the same risk aversion theory from the perspective of investor population.
+
+graph 10
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+Population_to_Score <- ggplot(aes(factor(ProsperScore), Investors), data = ds) + 
+  geom_violin(alpha =0.05)+
+  stat_summary(fun.y="mean", geom="point", shape=21, size=1, fill='white')+
+  theme_economist()+
+  scale_x_discrete(breaks=seq(0,11,1))+
+  scale_y_sqrt()+
+  xlab("Prosper Score") + ylab("Investor Population") +
+  ggtitle('Investor Population With Prosper Score')  
+grid.arrange(Population_to_Score)
+```
+
+
+The below graph show the relationship between Investor population and loan amount
+
+graph 11
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+Investor_to_LoanAmount <- ggplot(ds,aes(LoanOriginalAmount,Investors))+
+  geom_point(alpha =0.1,color ='#374785')+
+  theme_economist()+
+  xlab("Loan Amount") + ylab("Investor Population") +
+  ggtitle('Investor Population With Loan Amount')  
+grid.arrange(Investor_to_LoanAmount)
+```
+
+As we can see, most loans are in the area where loan amount are below 10,000, and investor population are below 250. And we can also observe that, most borrowers like to borrow money in whole amount such as 10,000, 15,000, 20,000, 30,000, 35,000. 
+
+Next I'll take a look at the relationship between Investor population with Borrow Rate. 
+
+graph 12
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+rate_investors <- ggplot(ds,aes(BorrowerRate,Investors))+
+  geom_point(alpha = 0.05,color ='#374785')+
+  theme_economist()+
+  geom_smooth()+
+  xlab("Borrow Rate") + ylab("Investor Population") +
+  ggtitle('Investor Population With Borrow Rate')  
+grid.arrange(rate_investors)
+
+```
+
+This graph is quite intesting, the majority investors prefer loans within range from 10-20, there do exist some risk lovers who dare to invest in loans with rate higher than 30%.
+
+
+After all these investigations, I'm wondering which type of investment would give the best return, after all, as a risk averse investor, I would definitely love to find the investment which gives high return but low risk.
+
+graph 13
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+Category_to_Return <- ggplot(aes(ds$ListingCategory, 
+                                 EstimatedReturn,
+                                 group = ds$ListingCategory), 
+                             data = ds) + 
+  geom_boxplot(alpha =0.3) + 
+  stat_summary(fun.y="mean", geom="point", shape=23, size=1, fill="orange")+
+  theme_economist()+
+  xlab("Category") + ylab("Return") +
+  scale_x_continuous(breaks=seq(0,20,2))+
+  ggtitle('Return With Category')
+grid.arrange(Category_to_Return)
+ggsave('~/Desktop/Return_with_category.jpeg')
+```
+ As we can see from the graph, most categories give roughly the similar return, the difference is within 1%, yet, their risk is drastically different, type 10(Cosmetic Procedure) gives a good reward and a small variation.So I conclude - The future belongs to those who believe in the beauty :).
+
+Here is a mean and median return graph similar to the above graph,but only focus on the mean and median.
+
+graph14
+
+```{r  echo=FALSE, message=FALSE, warning=FALSE}
+meanEstimatedReturn <- ds[c('ListingCategory', 'EstimatedReturn')] %>%
+    filter(EstimatedReturn!="NA")%>%
+    group_by(ListingCategory) %>% 
+    summarise (mean = mean(EstimatedReturn), 
+               median = median(EstimatedReturn))
+meanEstimatedReturn <- melt(as.data.frame(meanEstimatedReturn), 
+                            id = 'ListingCategory')
+Return_to_Category <- ggplot(aes(ListingCategory, 
+                                 value, 
+                                 fill = variable), 
+                             data= meanEstimatedReturn) +
+  geom_bar(stat="identity", position = 'dodge',alpha = 0.7)+
+  theme_economist()+
+  xlab("Category") + ylab("Mean&Median Return") +
+  scale_x_continuous(breaks=seq(0,20,2))+
+  ggtitle('Return With Category') 
+  
+grid.arrange(Return_to_Category)
+
+```
+
+graph 15
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+Return_of_Region <- multiple_variable_data %>%
+  select(EstimatedReturn,region)%>%
+  filter(EstimatedReturn!="NA")%>%
+  group_by(region)%>%
+  summarise(mean = mean(EstimatedReturn))#LOA with region dataframe
+Return_of_Region$mean <-  as.numeric(Return_of_Region$mean)
+meanValue <- median(Return_of_Region$mean)
+
+Return_map <- arrange(merge(map,
+                            Return_of_Region,
+                            by='region',
+                            all = TRUE),
+                      order)
+  # add long and lag to the datafrome
+Return_map$mean[is.na(Return_map$mean)] <- meanValue
+Borrow_states <- ggplot(data = Return_map, 
+                        aes(x = long, 
+                            y = lat,
+                            group = group)) +
+  geom_polygon(aes(fill=cut_number(mean,5)))+
+  coord_map()+
+  scale_fill_manual("Return Range", values = rev(c("#ea0000",'#f9eae3','#eec9df','#ee8b8b','#f4eeee')),
+                    labels=c("1star",'2star','3star','4star','prime'))+
+  geom_text(data = states, aes(x     = x, 
+                               y     = y, 
+                               label = BorrowerState,
+                               group = NULL), 
+            size = 3, 
+            colour="grey")+
+  theme_economist() +
+  xlab("Longitude") + ylab("Latitude") +
+  ggtitle('Estimated Return Among States')
+
+grid.arrange(Borrow_states)
+
+```
+
+
+# Bivariate plot Summary
+In the above plots, I analysed 2 major area, reward and risk and briefly discussed how good is the Prosper scoring system.
+
+Here are some of the findings worth noting.
+
+Firstly,faced with two investments with a similar expected return ,investorsprefer the one with the lower risk,and majority investors are shy away from high rewards loans since they bear signifcantly higher risk. thus, most investors are risk averse. And some risk averse investors would like to sacrifice return for getting a lower risk loan. Neverthless,there do exist some risk lovers who dare to invest high risk loans for higher rewards. 
+
+Secondly,  most categories give roughly the similar return, the difference is within 1%, yet, their risk is drastically different, Cosmetic Procedure gives a good reward and a small variation. And I conclude that The future belongs to those who believe in the beauty.
+
+Last but not the least, there do exits some flaw in Prosper scoring system which need further improvement whether in the model or algorithm or other aspect such as policy or operations to reduce the amount of fraudster's attack.
+
+
+
+# Multivariate Plots 
+
+Lastly, I'll take a look at more variables to see if any interesting pattern can be detected
+
+first I'll draw a correlation map between some selected variables.
+
+graph 16
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ds$ProsperScore = as.numeric(ds$ProsperScore)
+cols = c(5,8,9,10,13,16,40,43,47,50,64,68,81)
+ds[,cols] = apply(ds[,cols], 2, function(x) as.numeric(as.character(x)))
+relation_data <-  na.omit(ds[,cols])
+colnames(relation_data) <- c("Term",
+                           "APR",
+                           "Rate",
+                           "Yield",
+                           "EReturn",
+                           "Score",
+                           "PR12",
+                           "ABC",
+                           "DTI",
+                           "SMI",
+                           "LOA",
+                           "MLP",
+                           "IVS")
+M <- cor(relation_data)
+corrplot(M,method="color")
+#BorrowerAPR -> APR, BorrowerRate -> Rate, LenderYield -> Yield
+#EstimatedReturn -> EReturn, ProsperScore-> 
+#Score,PublicRecordsLast12Months -> PR12
+#AvailableBankcardCredit -> ABC, StatedMonthlyIncome->SMI,MonthlyLoanPayment->MLP,LoanOriginalAmount->LOA
+
+```
+
+As we can see from above picture, LOA(LoanOriginalAmount) has strong negative relationship with Rate,Prosper score has a even higher negative relationship with Borrower Rate, these two terms greatly influenced investors' choice on which loan to invest. 
+Estimated Return may be a better measurement for potential return,since it's an adjusted term, yet we see less correlation between Estimated return and terms such as LOA(LoanOriginalAmount), Prosper Score,SMI(Stated Monthly Income).
+
+The below graph shows the relationship between Estimated Return and Loan Amount based on different Prosper Score. 
+
+graph 17
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+Return_on_Amount <- ggplot(data = ds, aes(EstimatedReturn,
+                                          LoanOriginalAmount)) + 
+    geom_point(alpha = 0.3,size = 0.1) + 
+  facet_wrap(~ProsperScore)+
+    theme_economist() +
+  scale_x_continuous(breaks = seq(-0.2,0.3,0.2))+
+    xlab("Loan Amount") + ylab("Estimated Return") +
+    ggtitle('Return On Loan Amount Among Different Score')
+
+grid.arrange(Return_on_Amount)
+
+```
+
+As we can clearly see from the above chart, graphs with higher scores have a isosceles triangle shape and tends to have a long tail on the right, meanwhile graphs with lower scores have isosceles triangle shape and tends to have a long tail on the left. 
+
+Return On Loan Amount Among Different Categories
+
+graph 18
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+Return_on_Amount <- ggplot(data = ds, aes(EstimatedReturn,
+                                          LoanOriginalAmount)) + 
+    geom_point(alpha =0.4, size =0.1) + 
+    facet_wrap(~ListingCategory)+
+    scale_x_continuous(breaks=seq(-0.2,0.3,0.2))+
+    theme_economist() +
+    xlab("Loan Amount") + ylab("Estimated Return") +
+    ggtitle('Return On Loan Amount Among Different Categories')
+
+grid.arrange(Return_on_Amount)
+
+```
+
+Monthly Income On Employment duration Among Different Score
+
+graph 19
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+Income_to_Employment <- ggplot(aes(EmploymentStatusDuration, 
+                                   StatedMonthlyIncome), 
+                               data = subset(ds, ds$StatedMonthlyIncome < quantile(ds$StatedMonthlyIncome, .9))) +  
+  geom_point(alpha = 0.1) + 
+  theme_economist() +
+  facet_wrap(~ProsperScore)+
+  ylab("Monthly Income") + xlab("Employment duration") +
+  ggtitle('Monthly Income On Employment duration Among Different Score')
+
+grid.arrange(Income_to_Employment)
+```
+
+
+
+# Multivariate Analysis
+
+In the above plots, I analysed the correlations between multiple variables and dive deeper in the relationship of Estimated Return and Loan Amount based on different factors, as well as the relationship between income and eployment duration based on different factors.
+
+Here are some findings related to the above graph.
+
+Firstly,  Loan Amount and Prosper score have strong negative correlation with Borrower Rate, and these two terms greatly influenced investors' choice on which loan to invest. 
+
+Secondly,  In the return on loan amount chart, graphs with higher scores have a isosceles triangle shape and tends to have a long tail on the right, meanwhile graphs with lower scores tends to have a long tail on the left. 
+
+# Final Plots and Summary
+
+### Plot One
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+multiple_variable_data <- loan_region_state %>%
+  select(ProsperScore,
+         LoanOriginalAmount,
+         EstimatedReturn,
+         LoanStatus,
+         BorrowerRate,
+         Investors,
+         region)
+
+Score_of_Region <- multiple_variable_data %>%
+  select(ProsperScore,region)%>%
+  filter(ProsperScore!="NA")%>%
+  group_by(region)%>%
+  summarise(mean = mean(ProsperScore))#loan Original Amount with region dataframe
+Score_of_Region$mean <-  as.numeric(Score_of_Region$mean)
+meanValue <- median(Score_of_Region$mean)
+
+Score_map <- arrange(merge(map,
+                           Score_of_Region,
+                           by='region',
+                           all = TRUE),
+                     order)
+  # add long and lag to the datafrome
+Score_map$mean[is.na(Score_map$mean)] <- meanValue
+Borrow_states <- ggplot(data = Score_map, 
+                        aes(x = long, 
+                            y = lat,
+                            group = group)) +
+  geom_polygon(aes(fill=cut_number(mean,5)))+
+  coord_map()+
+  scale_fill_manual("Score Range", values = rev(c("#fef0d9",'#fdcc8a','#fc8d59','#e34a33','#b30000')),
+                    labels=c("1star",'2star','3star','4star','5star'))+
+  theme_bw()+
+  geom_text(data = states, aes(x     = x, 
+                               y     = y, 
+                               label = BorrowerState,
+                               group = NULL), 
+            size = 3, 
+            colour="grey")+
+  theme_economist() +
+  xlab("Longitude") + ylab("Latitude") +
+  ggtitle('Credit Score Among States')
+
+grid.arrange(Borrow_states)
+```
+
+### Description One
+
+The above picture show the average credit score among states, even though credit score doesn't vary much among states and it has nothing to do with personal loans, we can still get a general idea about the overall performance of these states. States along side the east coast and west coast have better credit score in general than those states in the middle region. 
+
+### Plot Two
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+Return_to_Score <- ggplot(aes(ProsperScore, 
+                              EstimatedReturn,
+                              group = ProsperScore), 
+                          data = ds) + 
+  geom_boxplot(outlier.size=1.5, alpha =0.2)+
+  stat_summary(fun.y="mean", 
+               geom="point", 
+               shape=23, 
+               size=1, 
+               fill="orange")+
+  theme_economist()+
+  scale_x_continuous(breaks=seq(0,11,1))+
+  xlab("Prosper Score") + ylab("Estimated Return") +
+  ggtitle('Estimated Return With Prosper Score')  
+grid.arrange(Return_to_Score)
+```
+
+### Description Two
+
+As we can see from the above graph, most loans with score below 8 offer similar expected return, yet they bear different risks. For instance, for borrowers with score 1, you would probably lose 20% of your principle, while for borrowers with a higher score , let's say score 7, the maximum amount you would lose is around 2% of your principle. This observation fits our theory exactly. Further more, since the number of  prime loans are limited, investors would like to sacrifice return for a lower risk loan. 
+
+
+### Plot Three
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+title <- "Correlation Between Different Variables"
+ds$ProsperScore = as.numeric(ds$ProsperScore)
+cols = c(5,8,9,10,13,16,40,43,47,50,64,68,81)
+ds[,cols] = apply(ds[,cols],
+                  2, 
+                  function(x) as.numeric(as.character(x)))
+relation_data <-  na.omit(ds[,cols])
+colnames(relation_data) <- c("Term",
+                             "APR",
+                             "Rate",
+                             "Yield",
+                             "EReturn",
+                             "Score",
+                             "PR12",
+                             "ABC",
+                             "DTI",
+                             "SMI",
+                             "LOA",
+                             "MLP",
+                             "IVS")
+M <- cor(relation_data)
+corrplot(M,method="color",
+         title = title,
+         mar=c(0,0,1,0))
+#BorrowerAPR -> APR, BorrowerRate -> Rate, LenderYield -> Yield
+#EstimatedReturn -> EReturn, ProsperScore-> Score,PublicRecordsLast12Months -> PR12
+#AvailableBankcardCredit -> ABC, StatedMonthlyIncome->SMI,MonthlyLoanPayment->MLP,LoanOriginalAmount->LOA
+
+```
+
+### Description Three
+As we can see from above picture, LOA(LoanOriginalAmount) has strong negative relationship with Rate,Prosper score has a even higher negative relationship with Borrower Rate, these two terms greatly influenced investors' choice on which loan to invest. 
+Estimated Return may be a better measurement for potential return,since it's an adjusted term, yet we see less correlation between Estimated return and terms such as LOA(LoanOriginalAmount), Prosper Score,SMI(Stated Monthly Income). 
+
+# Reflection
+In this report, I analyzed  the influence of multiple variables on a loan issuing in P2P industry and  got a good understanding of different variables and their relationship between each other. Meanwhile, I also have lots of interesting observations and finding during the analysis. 
+
+Apparently, P2P industry is at its early age, though it is a small industry, it advances dramatically and owns multiple merits compared with banking system and credit union. Its score system takes advanced machine learning algorithms and models , utilize the potential of big data and well measured the credit worthiness of their customers. But, there are still weakness  and flaws presented in its system and these flaws are actively used by fraudulent appliers. This will be a big threat to the development of the industry.
+
+Judging by its Term structure, state applying distribution and categories distribution, we could expect a huge diversification and variation emerging in this industry.  However, before it grows in to a behemoth, numerous new fraud schemes will appeal and spoil the industry in the cradle. In addition, banks and credit union will also join the competition and try to topple this little brother. Further more, regulation and new laws will also pose potential thread to the industry. 
+
+The advent of this new business model is much welcomed from the perspective of an investor or a borrower , as it drastically brings down the cost of raising a funds and provides a better option to the investors, neediness to mention these convenient  services it gives. Though the road forward is tough and arduous, I still have great faith in this industry simply because it brings down the transaction cost.
+
+The dataset has rich information to discover, limited by the time and imagination, I could only scratch the  surface, If I have more time, I would like to build the model myself and predict the loan outcome and join the whole process of the loan applying and investing process to see if any further interesting things can be revealed. 
