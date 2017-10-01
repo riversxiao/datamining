@@ -8,8 +8,12 @@
 
 source(deepdotweb)
 
-In this project, I'm creating different python code to handle different 
-aspect of data analysis
+I'm currently working in an online payment company handling various risky transactions. As a risk analyst,I find it  import to know the story behind the data so that i can avoid myself being blinded by data,neverthless, it's equally important  
+to sharp data analytic skills to get to deal with risky transactions. 
+
+In order to sharp my data analytic skills, I'm creating this repo to record my learning endeavour. 
+
+I divided the learning paths into the following five categories
 
 1. webscaper for get data from various data source
 
