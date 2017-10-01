@@ -1,0 +1,19 @@
+,sex,sexLabel,yearsInBusinessLabel,count
+0,1,all,Less than 10 years,64
+1,1,all,10 to 18 years ,75
+2,1,all,19 to 30 years,270
+3,1,all,31 to 50 years,241
+4,1,all,51 to 70 years,59
+5,1,all,more than 70 years,5
+6,2,female,Less than 10 years,31
+7,2,female,10 to 18 years ,37
+8,2,female,19 to 30 years,90
+9,2,female,31 to 50 years,86
+10,2,female,51 to 70 years,17
+11,2,female,more than 70 years,0
+12,3,male,Less than 10 years,33
+13,3,male,10 to 18 years ,38
+14,3,male,19 to 30 years,180
+15,3,male,31 to 50 years,155
+16,3,male,51 to 70 years,42
+17,3,male,more than 70 years,5
