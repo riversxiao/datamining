@@ -9,10 +9,10 @@ fraud.head()
 col_with_na = col_names[1:8]
 fraud_data = fraud
 for i in col_with_na:
-    fraud_data[i].replace(fraud_data[i][0],1, inplace= True)
-    fraud_data[i].replace('NaN', 0, inplace= True)
-fraud_data['created'] = pd.to_datetime(fraud_data['created'],format ='%m/%d/%y  %H:%M:%S')
-fraud_data['last_rcvd'] = fraud_data['last_rcvd'].replace('---',np.nan)
+    fraud_data[i].replace(fraud_data[i][0],1, inplace= True)# replace the link with 1 if link exists
+    fraud_data[i].replace('NaN', 0, inplace= True)# replace the link with 0 if the no link
+fraud_data['created'] = pd.to_datetime(fraud_data['created'],format ='%m/%d/%y  %H:%M:%S') # to datetime
+fraud_data['last_rcvd'] = fraud_data['last_rcvd'].replace('---',np.nan)# to na
 fraud_data['last_rcvd'] = pd.to_datetime(fraud_data['last_rcvd'],format ='%m/%d/%y')
 fraud_data['last_sent'] = fraud_data['last_sent'].replace('---',np.nan)
 fraud_data['last_sent'] = pd.to_datetime(fraud_data['last_sent'],format ='%m/%d/%y')
