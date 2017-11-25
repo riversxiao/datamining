@@ -48,23 +48,28 @@ I divided the learning paths into the following five categories
 
 2. datacleaning for preprocessing the data
 
-There are lots of work to be done here, this is usually the most labor intensive work to be performed. In order to 
-make this part of task easier,I wrote several data cleaning scripts.
+* There are lots of work to be done here, this is usually the most labor intensive work to be performed. In order to make this part of task easier,I wrote several data cleaning scripts.
 
-Detailed description can be found in subfolder:datacleaning
+* Detailed description can be found in subfolder:datacleaning
 
 3. datastoring for importing data excute sql and export data for further analysis
 
-sql or nonsql is import for storing data. For a lot of data analysis tasks, this part is often skiped. 
-This folder is to create sql and tips to optimize its performance. 
+* sql or nonsql is import for storing data. For a lot of data analysis tasks, this part is often skiped. This folder is to create sql and tips to optimize its performance. 
 
-Detailed description can be found in subfolder:datastoring
+* Detailed description can be found in subfolder:datastoring
 
 4. datamanipulation for performing data analysis using tools like numpy pandas in python or dplyr in R
 
+TODO:
+
 5. datavisualization for presenting data to audience including ggplot2, matplotlib, D3, tableau
 
+* In this subfolder, I'm using libraries like matplotlib, ggplot2, seaborn and plotly with python, R ,D3 and tableau to create various data visualizations to list on the final report.
+
+TODO:
 ### further notice
+
+TODO:
 
 This is a continuous project that need further refine and maintain, I'll keep updating the content
 
