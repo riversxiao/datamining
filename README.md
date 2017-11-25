@@ -67,11 +67,10 @@ TODO:
 * In this subfolder, I'm using libraries like matplotlib, ggplot2, seaborn and plotly with python, R ,D3 and tableau to create various data visualizations to list on the final report.
 
 TODO:
-### further notice
+### Further Notice
+------
 
-TODO:
-
-This is a continuous project that need further refine and maintain, I'll keep updating the content
+This is a continuous project that need further refinement and maintaining, I'll keep updating the content
 
 
 
