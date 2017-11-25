@@ -42,9 +42,9 @@ I divided the learning paths into the following five categories
 
 1. webscaper for get data from various data source
 
-In this project I created several webscrapers with libraries like urllib, beautiful soup, selenium and scrapy
+* In this project I created several webscrapers with libraries like urllib, beautiful soup, selenium and scrapy
 
-Detailed descriptions can be found in subfolder:webscraper
+* Detailed descriptions can be found in subfolder:webscraper
 
 2. datacleaning for preprocessing the data
 
